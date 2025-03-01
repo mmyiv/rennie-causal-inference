@@ -1,0 +1,43 @@
+---
+title: "michelle"
+format: html
+editor: visual
+execute: 
+  warning: false
+  message: false
+html:
+    embed-resources: true
+    toc: true
+---
+
+## Setup
+
+#### Load libraries
+
+```{r}
+library(here)
+library(tidyverse)
+library(janitor)
+```
+
+#### Read in and clean data
+
+```{r}
+# Note that I renamed the data file
+minnow <- read_csv(here("data", "minnow.csv")) %>%
+  clean_names() %>%
+  # Rename columns to fish species
+  rename(
+    northern_redbelly_dace = f182,
+    finescale_dace = f183,
+    fathead_minnow = f209,
+    northern_pearl_dace = f214,
+    slimy_sculpin = f382
+  ) %>%
+   mutate(date = as.Date(date, format = "%d-%b-%y")) # Change to YMD and date format
+
+# Note: Possibly drop comments column? 
+# Seasons also look weird: "aSpring" "zFall" 
+# Location refers to net type? "Deep Net"    "Shallow Net" "C. L. Net"   "C.L. Net"    "Shallow"     "Deep"        "Wing net" 
+# Flag is all NA
+```

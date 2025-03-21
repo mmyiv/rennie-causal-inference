@@ -22,7 +22,7 @@ BACI: Before-after control-impact (BACI) design ANOVA:
 
 -   After aquaculture (2008 and later).
 
--   A significant interaction term indicateda difference in direction and/or magnitude of effects between the lake undergoing aquaculture and reference lake
+-   A significant interaction term indicated difference in direction and/or magnitude of effects between the lake undergoing aquaculture and reference lake
 
 -   Minnow counts (fathead minnow and all species combined) were summed daily and a catch-per-unit-effort (CUE) from trap nets (number of fish per net day, or number of fish divided by the product of the number of nets set and days that nets fished) was estimated for each spring and autumn sampling period.
 
@@ -30,20 +30,49 @@ To evaluate the impact of aquaculture on minnow abundance (mean CUE in either sp
 
 Minnow abundance was squareroot transformed to normalise and homogenise residual distributions. Pre-impact minnow abundance from 1989–2002 to provide sufficient sample sizes.
 
-Separate ANOVAs were conducted in each season (spring andautumn).
+Separate ANOVAs were conducted in each season (spring and autumn).
 
 Visual plots and Tukey post hoc tests were used to determine the significance and directionality of reported differences
 
-### Results 
+### Results
 
 Minnow abundance (mean seasonal CUE) in autumn increased sharply in Lake 375 during aquaculture, compared to lake 373 (ANOVA, lake by period interaction, F2,32 = 4.8, p = 0.015).
 
 During aquaculture, autumn minnow abundance in Lake 375 was significantly higher than before (Tukey, p = 0.0004) and after aquaculture (Tukey, p = 0.04).
 
-Minnow abundance in Lake 375 was significantly greater than in Lake 373 during aquaculture (Tukey,
-p = 0.005), but not different from 373 before and after aquaculture (Tukey, p ≫ 0.05). By contrast, there were no significant differences in minnow abundance between aquaculture and non-aquaculture years
-among lakes during spring (ANOVA, F2,32 = 0.3, p = 0.7; Figure 4b), suggestive of significant overwinter mortality of minnows. Increases in minnow abundance in Lake 375 were almost entirely driven by
-an increase in fathead minnow (Supporting Information Appendix B)
+Minnow abundance in Lake 375 was significantly greater than in Lake 373 during aquaculture (Tukey, p = 0.005), but not different from 373 before and after aquaculture (Tukey, p ≫ 0.05). By contrast, there were no significant differences in minnow abundance between aquaculture and non-aquaculture years among lakes during spring (ANOVA, F2,32 = 0.3, p = 0.7; Figure 4b), suggestive of significant overwinter mortality of minnows. Increases in minnow abundance in Lake 375 were almost entirely driven by an increase in fathead minnow (Supporting Information Appendix B)
+
+### Interpreting Results
+
+What is an F-value?
+
+-   Ratio of variability
+
+-   F = Variance between / Variance within
+
+-   Higher F-value = stronger differences between groups
+
+-   Notation: (df between, df within)
+
+    -   Between: DF of factor being tested (3 periods - 1)
+
+    -   Within: DF for residuals (sample size - \# groups or df.residual on fall_model)
+
+What is Turkey? - Tukey
+
+-   Turkey's Honest Significant Difference (HSD) is a post-hoc test
+
+-   Identifies which group means differ significantly after running ANOVA
+
+-   Controls for type 1 error (false positives)
+
+-   Printed results
+
+    -   diff = difference in means
+
+    -   lwr, upr, = lower and upper bounds for 95% CI
+
+    -   p adj = adjusted p-value
 
 ## Setup
 
@@ -105,6 +134,71 @@ spring <- minnow_baci %>%
 
 ```{r}
 # Test out BACI for fall
+
+# Fit the model
 fall_model <- aov(sqrt_minnow ~ lake * period, data = fall)
 fall_anova <- Anova(fall_model, type = "III") 
+
+# Print results
+print(fall_model)
+print(fall_anova)
+
+# Check reference
+#print(levels(fall$lake)) # 373 is reference
 ```
+
+### Interpreting Results
+
+SS: Variability in sqrt_minnow due to these components
+
+RSS: Unexplained variation – large
+
+RSE: Spread of residuals
+
+Anova Table:
+
+SS: Variation explained
+
+F-value: variance explained by interaction / unexplained var (residuals)
+
+(bigger = more explanation by the interaction)
+
+Lake: p-value is 0.74 (\>\> 0.05) there is no sig. diff between lakes
+
+Period: p-value is 0.34 (\>\>0.05) time period does not impact
+
+Lakexperiod: p-value = 0.0001984; period on abundance differs between lakes
+
+```{r}
+# Turkey HSD for fall
+turkey_fall <- TukeyHSD(fall_model)
+
+# Print results
+print(turkey_fall)
+
+# Visualize results
+plot(turkey_fall)
+
+```
+
+Significant values:
+
+-   375:treatment vs. 373:post
+
+    -   375 has more abundance than 373 after treatment
+
+-   375:treatment vs. 375:post:
+
+    -   375 has more abundance during treatment than after
+
+-   375:treatment vs. 373:treatment
+
+    -   375 during treatment has more abundance than 373 during treatment
+
+    ```{r}
+    fall_residuals <- residuals(fall_model)
+    fall_fitted <- fitted(fall_model)  # Predicted values
+    qqnorm(fall_residuals)
+    qqline(fall_residuals, col = "red")
+
+    ```
